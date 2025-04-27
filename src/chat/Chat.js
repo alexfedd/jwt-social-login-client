@@ -90,6 +90,10 @@ const Chat = (props) => {
       const message = {
         chatId: activeChat.id,
         content: msg,
+        sender: {
+          id: currentUser.id,
+          username: currentUser.username,
+        },
       };
       stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
 
@@ -230,7 +234,7 @@ const Chat = (props) => {
         <ScrollToBottom className="messages">
           <ul>
             {messages.content?.map((msg) => (
-              <li className={msg.sender.id !== currentUser.id ? "replies" : "sent"}>
+              <li className={msg.sender?.id !== currentUser.id ? "replies" : "sent"}>
                 <p>{msg.content}</p>
                 {console.log(msg, messages)}
               </li>
