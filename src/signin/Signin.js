@@ -7,6 +7,7 @@ import {
 } from "@ant-design/icons";
 import { login } from "../util/ApiUtil";
 import "./Signin.css";
+import { Link } from "react-router-dom/cjs/react-router-dom";
 
 /*global FB*/
 
@@ -87,7 +88,7 @@ const Signin = (props) => {
             Log in
           </Button>
         </Form.Item>
-        Not a member yet? <a href="/signup">Sign up</a>
+        Not a member yet? <Link to={'/signup'}>Sign up</Link>
       </Form>
     </div>
   );

@@ -5,12 +5,13 @@ import Signup from "./signup/Signup";
 import Profile from "./profile/Profile";
 import Chat from "./chat/Chat";
 import "./App.css";
+import { HashRouter } from "react-router-dom/cjs/react-router-dom";
 
 export const AppContext = React.createContext();
 const App = (props) => {
   return (
     <div className="App">
-      <BrowserRouter>
+      <HashRouter>
         <Switch>
           <Route exact path="/" render={(props) => <Profile {...props} />} />
           <Route
@@ -25,7 +26,7 @@ const App = (props) => {
           />
           <Route exact path="/chat" render={(props) => <Chat {...props} />} />
         </Switch>
-      </BrowserRouter>
+      </HashRouter>
     </div>
   );
 };

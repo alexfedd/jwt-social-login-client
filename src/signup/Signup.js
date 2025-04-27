@@ -3,6 +3,7 @@ import { Form, Input, Button, notification } from "antd";
 import { DingtalkOutlined } from "@ant-design/icons";
 import { signup } from "../util/ApiUtil";
 import "./Signup.css";
+import { Link } from "react-router-dom/cjs/react-router-dom";
 
 const Signup = (props) => {
   const [loading, setLoading] = useState(false);
@@ -75,7 +76,7 @@ const Signup = (props) => {
             Signup
           </Button>
         </Form.Item>
-        Already a member? <a href="/login">Log in</a>
+        Already a member? <Link to="/login">Log in</Link>
       </Form>
     </div>
   );
