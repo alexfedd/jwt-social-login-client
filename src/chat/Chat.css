@@ -6,7 +6,7 @@
   min-height: 300px;
   max-height: 720px;
   background: #e6eaea;
-  margin-left: 270px;
+  margin: 0 auto;
 }
 @media screen and (max-width: 360px) {
   #frame {
