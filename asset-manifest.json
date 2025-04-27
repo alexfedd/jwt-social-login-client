@@ -1,26 +1,26 @@
 {
   "files": {
-    "main.css": "/messengernp/static/css/main.bbc97746.chunk.css",
-    "main.js": "/messengernp/static/js/main.f8f1ba84.chunk.js",
-    "main.js.map": "/messengernp/static/js/main.f8f1ba84.chunk.js.map",
-    "runtime-main.js": "/messengernp/static/js/runtime-main.8b4681ae.js",
-    "runtime-main.js.map": "/messengernp/static/js/runtime-main.8b4681ae.js.map",
-    "static/css/2.c27a359e.chunk.css": "/messengernp/static/css/2.c27a359e.chunk.css",
-    "static/js/2.9c224e54.chunk.js": "/messengernp/static/js/2.9c224e54.chunk.js",
-    "static/js/2.9c224e54.chunk.js.map": "/messengernp/static/js/2.9c224e54.chunk.js.map",
-    "index.html": "/messengernp/index.html",
-    "precache-manifest.fe6c192ebe92cbdd0a3aaeaee1427bb1.js": "/messengernp/precache-manifest.fe6c192ebe92cbdd0a3aaeaee1427bb1.js",
-    "service-worker.js": "/messengernp/service-worker.js",
-    "static/css/2.c27a359e.chunk.css.map": "/messengernp/static/css/2.c27a359e.chunk.css.map",
-    "static/css/main.bbc97746.chunk.css.map": "/messengernp/static/css/main.bbc97746.chunk.css.map",
-    "static/js/2.9c224e54.chunk.js.LICENSE.txt": "/messengernp/static/js/2.9c224e54.chunk.js.LICENSE.txt",
-    "static/media/user.png": "/messengernp/static/media/user.1f0a44cd.png"
+    "main.css": "/jwt-social-login-client/static/css/main.bbc97746.chunk.css",
+    "main.js": "/jwt-social-login-client/static/js/main.fa3c65b5.chunk.js",
+    "main.js.map": "/jwt-social-login-client/static/js/main.fa3c65b5.chunk.js.map",
+    "runtime-main.js": "/jwt-social-login-client/static/js/runtime-main.bf46b17d.js",
+    "runtime-main.js.map": "/jwt-social-login-client/static/js/runtime-main.bf46b17d.js.map",
+    "static/css/2.c27a359e.chunk.css": "/jwt-social-login-client/static/css/2.c27a359e.chunk.css",
+    "static/js/2.b7b2fa72.chunk.js": "/jwt-social-login-client/static/js/2.b7b2fa72.chunk.js",
+    "static/js/2.b7b2fa72.chunk.js.map": "/jwt-social-login-client/static/js/2.b7b2fa72.chunk.js.map",
+    "index.html": "/jwt-social-login-client/index.html",
+    "precache-manifest.87f8e428cfe04b24f79407442056a297.js": "/jwt-social-login-client/precache-manifest.87f8e428cfe04b24f79407442056a297.js",
+    "service-worker.js": "/jwt-social-login-client/service-worker.js",
+    "static/css/2.c27a359e.chunk.css.map": "/jwt-social-login-client/static/css/2.c27a359e.chunk.css.map",
+    "static/css/main.bbc97746.chunk.css.map": "/jwt-social-login-client/static/css/main.bbc97746.chunk.css.map",
+    "static/js/2.b7b2fa72.chunk.js.LICENSE.txt": "/jwt-social-login-client/static/js/2.b7b2fa72.chunk.js.LICENSE.txt",
+    "static/media/user.png": "/jwt-social-login-client/static/media/user.1f0a44cd.png"
   },
   "entrypoints": [
-    "static/js/runtime-main.8b4681ae.js",
+    "static/js/runtime-main.bf46b17d.js",
     "static/css/2.c27a359e.chunk.css",
-    "static/js/2.9c224e54.chunk.js",
+    "static/js/2.b7b2fa72.chunk.js",
     "static/css/main.bbc97746.chunk.css",
-    "static/js/main.f8f1ba84.chunk.js"
+    "static/js/main.fa3c65b5.chunk.js"
   ]
 }
