@@ -86,10 +86,12 @@ const Chat = (props) => {
     };
   };
   const onMessageReceived = (msg) => {
-    const notification = JSON.parse(msg.body);
+    const message = JSON.parse(msg.body);
     // const active = JSON.parse(sessionStorage.getItem("recoil-persist"))
     //   .chatActiveContact;
-    console.log(notification);
+    const newMessages = [...messages.content];
+    newMessages.push({sender: message.sender, content: message.content});
+    setMessages({ ...messages, content: newMessages });
     // if (active.id === notification.senderId) {
     //   findChatMessage(notification.id).then((message) => {
     //     const newMessages = JSON.parse(sessionStorage.getItem("recoil-persist"))
@@ -265,7 +267,7 @@ const Chat = (props) => {
               <li
                 key={key}
                 className={
-                  msg.sender?.id !== currentUser.id ? "replies" : "sent"
+                  (msg.sender?.id !== currentUser.id || msg.sender === currentUser.username) ? "replies" : "sent"
                 }
               >
                 <p>{msg.content}</p>
