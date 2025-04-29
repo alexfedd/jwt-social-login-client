@@ -102,7 +102,6 @@ const Chat = (props) => {
     // } else {
     //   message.info("Received a new message from " + notification.senderName);
     // }
-    loadContacts();
   };
   const onActiveChatChange = (chat) => {
     if (currentChatSubscription) {
