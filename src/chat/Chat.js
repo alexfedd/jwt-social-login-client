@@ -89,9 +89,12 @@ const Chat = (props) => {
     const message = JSON.parse(msg.body);
     // const active = JSON.parse(sessionStorage.getItem("recoil-persist"))
     //   .chatActiveContact;
-    const newMessages = [...messages.content];
-    newMessages.push({sender: message.sender, content: message.content});
-    setMessages({ ...messages, content: newMessages });
+    console.log(messages);
+    setMessages((prevMessages) => {
+      const newMessages = [...(prevMessages.content || [])];
+      newMessages.push({ sender: message.sender, content: message.content });
+      return { ...prevMessages, content: newMessages };
+    });
     // if (active.id === notification.senderId) {
     //   findChatMessage(notification.id).then((message) => {
     //     const newMessages = JSON.parse(sessionStorage.getItem("recoil-persist"))
@@ -118,9 +121,11 @@ const Chat = (props) => {
       };
       stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
       message.sender = currentUser;
-      const newMessages = [...messages.content];
-      newMessages.push(message);
-      setMessages({ ...messages, content: newMessages });
+      setMessages((prevMessages) => {
+        const newMessages = [...(prevMessages.content || [])];
+        newMessages.push({ sender: message.sender, content: message.content });
+        return { ...prevMessages, content: newMessages };
+      });
     }
   };
 
@@ -166,7 +171,9 @@ const Chat = (props) => {
 
     if (selectedUserIds.length === 1) {
       // Use the selected user's name as the chat name for private chats
-      const selectedUser = allUsers.find(user => user.id === selectedUserIds[0]);
+      const selectedUser = allUsers.find(
+        (user) => user.id === selectedUserIds[0]
+      );
       chatNameToUse = selectedUser ? selectedUser.username : chatNameToUse;
     } else if (chatNameToUse === "") {
       message.warning("Please enter a chat name");
@@ -175,7 +182,10 @@ const Chat = (props) => {
 
     const promise =
       selectedUserIds.length === 1
-        ? createPrivateChat({ name: chatNameToUse, user_id: selectedUserIds[0] })
+        ? createPrivateChat({
+            name: chatNameToUse,
+            user_id: selectedUserIds[0],
+          })
         : createGroupChat({ name: chatNameToUse, member_ids: selectedUserIds });
 
     promise
@@ -266,7 +276,10 @@ const Chat = (props) => {
               <li
                 key={key}
                 className={
-                  (msg.sender?.id !== currentUser.id || msg.sender === currentUser.username) ? "replies" : "sent"
+                  msg.sender?.id !== currentUser.id ||
+                  msg.sender === currentUser.username
+                    ? "replies"
+                    : "sent"
                 }
               >
                 <p>{msg.content}</p>
