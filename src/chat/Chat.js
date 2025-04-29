@@ -2,19 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Button, Checkbox, Input, message, Modal } from "antd";
 import {
   getUsers,
-  countNewMessages,
   findChatMessages,
-  findChatMessage,
   getUserChats,
   createPrivateChat,
   createGroupChat,
 } from "../util/ApiUtil";
-import { useRecoilValue, useRecoilState } from "recoil";
-import { loggedInUser, chatMessages } from "../atom/globalState";
+import { useRecoilValue } from "recoil";
+import { loggedInUser } from "../atom/globalState";
 import ScrollToBottom from "react-scroll-to-bottom";
 import "./Chat.css";
 import defaultAvatar from "./../assets/user.png";
-import { Link } from "react-router-dom/cjs/react-router-dom";
 
 var stompClient = null;
 const Chat = (props) => {
@@ -22,6 +19,8 @@ const Chat = (props) => {
   const [text, setText] = useState("");
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(undefined);
+  const [currentChatSubscription, setCurrentChatSubscription] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState({});
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
@@ -37,35 +36,54 @@ const Chat = (props) => {
 
   useEffect(() => {
     if (activeChat === undefined) return;
-    console.log(activeChat);
     findChatMessages(activeChat.id).then((msgs) => {
-      console.log(msgs);
-      return setMessages(msgs)
+      return setMessages(msgs);
     });
+    if (stompClient.connected) {
+      const chatSubscription = stompClient.subscribe(
+        `/topic/chat/${activeChat.id}`,
+        onMessageReceived
+      );
+      setCurrentChatSubscription(chatSubscription);
+    }
     loadContacts();
   }, [activeChat]);
-
-
+  useEffect(() => {
+    if (isConnected) {
+      const chatSubscription = stompClient.subscribe(
+        `/topic/chat/${activeChat.id}`,
+        onMessageReceived
+      );
+      setCurrentChatSubscription(chatSubscription);
+    }
+  }, [isConnected]);
   const connect = () => {
     const Stomp = require("stompjs");
     var SockJS = require("sockjs-client");
     SockJS = new SockJS("http://78.24.223.206:8082/ws");
     stompClient = Stomp.over(SockJS);
-    stompClient.connect({ Authorization: `Bearer ${localStorage.getItem('accessToken')}` }, async function (frame) {
-      console.log("Connected to WebSocket");
-  
-      // Подписываемся на уведомления для текущего пользователя
-      stompClient.subscribe(`/user/${currentUser.username}/queue/notifications`, onMessageReceived);
+    stompClient.connect(
+      { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
+      async function (frame) {
+        console.log("Connected to WebSocket");
 
-  });
-  
-  stompClient.onerror = function (error) {
+        // Подписываемся на уведомления для текущего пользователя
+        stompClient.subscribe(
+          `/user/${currentUser.username}/queue/notifications`,
+          onMessageReceived
+        );
+        setIsConnected(true);
+      }
+    );
+    stompClient.onerror = function (error) {
       console.log("WebSocket Error:", error);
-  };
-  
-  stompClient.onclose = function () {
+    };
+    stompClient.debug = function (str) {
+      console.log(str);
+    };
+    stompClient.onclose = function () {
       console.log("Connection closed");
-  };
+    };
   };
   const onMessageReceived = (msg) => {
     const notification = JSON.parse(msg.body);
@@ -84,7 +102,12 @@ const Chat = (props) => {
     // }
     loadContacts();
   };
-
+  const onActiveChatChange = (chat) => {
+    if (currentChatSubscription) {
+      currentChatSubscription.unsubscribe();
+    }
+    setActiveChat(chat);
+  };
   const sendMessage = (msg) => {
     if (msg.trim() !== "") {
       const message = {
@@ -99,7 +122,7 @@ const Chat = (props) => {
 
       const newMessages = [...messages.content];
       newMessages.push(message);
-      setMessages({...messages, content: newMessages});
+      setMessages({ ...messages, content: newMessages });
     }
   };
 
@@ -109,7 +132,6 @@ const Chat = (props) => {
     promise.then((promises) =>
       Promise.all(promises).then((chats) => {
         setChats(chats);
-        console.log(chats);
         if (activeChat === undefined && chats.length > 0) {
           setActiveChat(chats[0]);
         }
@@ -197,18 +219,19 @@ const Chat = (props) => {
           <ul>
             {chats.map((chat, key) => (
               <li
-                onClick={() => setActiveChat(chat)}
+                onClick={() => onActiveChatChange(chat)}
+                key={key}
                 className={
                   activeChat && chat.id === activeChat.id
                     ? "contact active"
                     : "contact"
                 }
               >
-                <div class="wrap">
+                <div className="wrap">
                   <span className="contact-status online"></span>
                   <img id={chat.id} src={defaultAvatar} alt="" />
-                  <div class="meta">
-                    <p class="name">{chat.name}</p>
+                  <div className="meta">
+                    <p className="name">{chat.name}</p>
                   </div>
                 </div>
               </li>
@@ -233,10 +256,14 @@ const Chat = (props) => {
         </div>
         <ScrollToBottom className="messages">
           <ul>
-            {messages.content?.map((msg) => (
-              <li className={msg.sender?.id !== currentUser.id ? "replies" : "sent"}>
+            {messages.content?.map((msg, key) => (
+              <li
+                key={key}
+                className={
+                  msg.sender?.id !== currentUser.id ? "replies" : "sent"
+                }
+              >
                 <p>{msg.content}</p>
-                {console.log(msg, messages)}
               </li>
             ))}
           </ul>
@@ -258,7 +285,7 @@ const Chat = (props) => {
             />
 
             <Button
-              icon={<i class="fa fa-paper-plane" aria-hidden="true"></i>}
+              icon={<i className="fa fa-paper-plane" aria-hidden="true"></i>}
               onClick={() => {
                 sendMessage(text);
                 setText("");

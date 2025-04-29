@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
-import { Card, Avatar } from "antd";
+import { Card, Avatar, Button } from "antd";
 import { useRecoilState } from "recoil";
 import { loggedInUser } from "../atom/globalState";
 import { LogoutOutlined } from "@ant-design/icons";
 import { getCurrentUser } from "../util/ApiUtil";
-import defaultImage from './../assets/user.png'
+import defaultImage from "./../assets/user.png";
 import "./Profile.css";
+import { Link } from "react-router-dom/cjs/react-router-dom";
 
 const { Meta } = Card;
 
@@ -40,15 +41,13 @@ const Profile = (props) => {
         actions={[<LogoutOutlined onClick={logout} />]}
       >
         <Meta
-          avatar={
-            <Avatar
-              src={defaultImage}
-              className="user-avatar-circle"
-            />
-          }
+          avatar={<Avatar src={defaultImage} className="user-avatar-circle" />}
           title={currentUser.username}
           description={"@" + currentUser.username}
         />
+        <Button>
+          <Link to={"/chat"}>Перейти в чаты</Link>
+        </Button>
       </Card>
     </div>
   );

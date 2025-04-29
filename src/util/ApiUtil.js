@@ -23,6 +23,9 @@ const request = (options) => {
         return Promise.reject(json);
       }
       return json;
+    }).catch((error) => {
+      console.error("Error parsing JSON response:", error);
+      return response;
     })
   );
 };

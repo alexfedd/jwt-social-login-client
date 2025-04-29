@@ -1,7 +1,6 @@
 {
   "name": "jwt-social-login-client",
   "version": "0.1.0",
-  "homepage": "https://alexfedd.github.io/jwt-social-login-client",
   "private": true,
   "dependencies": {
     "@ant-design/icons": "^4.2.1",
