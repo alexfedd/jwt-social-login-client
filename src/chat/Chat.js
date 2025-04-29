@@ -264,7 +264,7 @@ const Chat = (props) => {
                 key={key}
                 className={
                   msg.sender?.id !== currentUser.id ||
-                  msg.sender === currentUser.username
+                  msg.sender !пше == currentUser.username
                     ? "replies"
                     : "sent"
                 }
