@@ -6,6 +6,7 @@ import {
   getUserChats,
   createPrivateChat,
   createGroupChat,
+  uploadFile,
 } from "../util/ApiUtil";
 import { useRecoilValue } from "recoil";
 import { loggedInUser } from "../atom/globalState";
@@ -26,6 +27,8 @@ const Chat = (props) => {
   const [allUsers, setAllUsers] = useState([]);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [chatName, setChatName] = useState("");
+  const [file, setFile] = useState(null);
+
   useEffect(() => {
     if (localStorage.getItem("accessToken") === null) {
       props.history.push("/login");
@@ -105,14 +108,41 @@ const Chat = (props) => {
     }
     setActiveChat(chat);
   };
-  const sendMessage = (msg) => {
-    if (msg.trim() !== "") {
-      const message = {
-        chatId: activeChat.id,
-        content: msg,
-        sender: currentUser.username,
-      };
-      stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
+  const sendMessage = async (msg) => {
+    if (msg.trim() === "" && !file) {
+      message.warning("Cannot send an empty message");
+      return;
+    }
+
+    let fileUrl = null;
+
+    if (file) {
+      try {
+        const response = await uploadFile(file)
+        fileUrl = await response.text();
+        console.log(fileUrl);
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        message.error("Failed to upload file");
+        return;
+      }
+    }
+
+    const messageData = {
+      chatId: activeChat.id,
+      content: msg,
+      sender: currentUser.username,
+      ...(fileUrl && { fileUrl }),
+    };
+
+    stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(messageData));
+    setText(""); // Clear input field
+    setFile(null); // Reset attached file
+  };
+
+  const handleFileChange = (event) => {
+    if (event.target.files.length > 0) {
+      setFile(event.target.files[0]);
     }
   };
 
@@ -269,8 +299,14 @@ const Chat = (props) => {
                     : "replies"
                 }
               >
+                {msg.fileUrl && (
+                  <img
+                    src={`http://78.24.223.206:8082/api/files/${msg.fileUrl}`}
+                    alt="Attached"
+                    style={{ maxWidth: "200px", marginBottom: "10px" }}
+                  />
+                )}
                 <p>{msg.content}</p>
-                {console.log(msg.sender, currentUser.username, msg.sender?.id, currentUser.id)}
               </li>
             ))}
           </ul>
@@ -286,17 +322,23 @@ const Chat = (props) => {
               onKeyPress={(event) => {
                 if (event.key === "Enter") {
                   sendMessage(text);
-                  setText("");
                 }
               }}
             />
-
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ marginLeft: "10px" }}
+              className="file-input"
+              id="file-input"
+            />
+            <label htmlFor="file-input" className="file-label">
+              <i className="fa fa-paperclip" aria-hidden="true"></i>
+            </label>
             <Button
               icon={<i className="fa fa-paper-plane" aria-hidden="true"></i>}
-              onClick={() => {
-                sendMessage(text);
-                setText("");
-              }}
+              onClick={() => sendMessage(text)}
             />
           </div>
         </div>

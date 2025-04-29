@@ -709,6 +709,18 @@
   opacity: 0.5;
   cursor: pointer;
 }
+.file-input {
+  display: none;
+}
+.file-label {
+  position: absolute;
+  top: 13px;
+  right: 64px;
+  cursor: pointer;
+}
+.file-label i {
+  font-size: 1.5em;
+}
 @media screen and (max-width: 735px) {
   #frame .content .message-input .wrap .attachment {
     margin-top: 17px;

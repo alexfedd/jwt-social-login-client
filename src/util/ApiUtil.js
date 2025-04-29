@@ -17,16 +17,17 @@ const request = (options) => {
   const defaults = { headers: headers };
   options = Object.assign({}, defaults, options);
 
-  return fetch(options.url, options).then((response) =>
-    response?.json().then((json) => {
+  return fetch(options.url, options).then((response) => {
+    console.log(response);
+    return response?.json().then((json) => {
       if (!response.ok) {
         return Promise.reject(json);
       }
       return json;
     }).catch((error) => {
       console.error("Error parsing JSON response:", error);
-      return response;
     })
+  }
   );
 };
 
@@ -114,8 +115,6 @@ export function findChatMessages(chatRoomId) {
   });
 }
 
-
-
 export function findChatMessage(id) {
   if (!localStorage.getItem("accessToken")) {
     return Promise.reject("No access token set.");
@@ -124,5 +123,24 @@ export function findChatMessage(id) {
   return request({
     url: ROOT_URL + "/messages/" + id,
     method: "GET",
+  });
+}
+
+export function uploadFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request({
+    method: "POST",
+    url: ROOT_URL + "/api/files/upload",
+    setContentType: false,
+    body: formData,
+  });
+}
+
+export function getFile(fileName) {
+
+  return request({
+    url: ROOT_URL + "/api/files/" + fileName,
   });
 }
