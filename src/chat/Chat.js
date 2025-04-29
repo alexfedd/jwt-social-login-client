@@ -113,13 +113,10 @@ const Chat = (props) => {
       const message = {
         chatId: activeChat.id,
         content: msg,
-        sender: {
-          id: currentUser.id,
-          username: currentUser.username,
-        },
+        sender: currentUser.username,
       };
       stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
-
+      message.sender = currentUser;
       const newMessages = [...messages.content];
       newMessages.push(message);
       setMessages({ ...messages, content: newMessages });
@@ -163,14 +160,22 @@ const Chat = (props) => {
       message.warning("Select at least one user");
       return;
     }
-    if (chatName.trim() === "") {
+
+    let chatNameToUse = chatName.trim();
+
+    if (selectedUserIds.length === 1) {
+      // Use the selected user's name as the chat name for private chats
+      const selectedUser = allUsers.find(user => user.id === selectedUserIds[0]);
+      chatNameToUse = selectedUser ? selectedUser.username : chatNameToUse;
+    } else if (chatNameToUse === "") {
       message.warning("Please enter a chat name");
       return;
     }
+
     const promise =
       selectedUserIds.length === 1
-        ? createPrivateChat({ name: chatName, user_id: selectedUserIds[0] })
-        : createGroupChat({ name: chatName, member_ids: selectedUserIds });
+        ? createPrivateChat({ name: chatNameToUse, user_id: selectedUserIds[0] })
+        : createGroupChat({ name: chatNameToUse, member_ids: selectedUserIds });
 
     promise
       .then(() => {
@@ -264,6 +269,7 @@ const Chat = (props) => {
                 }
               >
                 <p>{msg.content}</p>
+                {console.log(msg)}
               </li>
             ))}
           </ul>

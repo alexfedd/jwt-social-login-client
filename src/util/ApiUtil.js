@@ -109,7 +109,7 @@ export function findChatMessages(chatRoomId) {
   }
 
   return request({
-    url: ROOT_URL + `/api/chat-messages/${chatRoomId}`,
+    url: ROOT_URL + `/api/chat-messages/${chatRoomId}?sort=timestamp,asc`,
     method: "GET",
   });
 }

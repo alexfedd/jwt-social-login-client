@@ -607,20 +607,25 @@
   height: 600px;
   min-height: calc(100% - 93px);
   max-height: calc(100% - 93px);
-  overflow-y: scroll;
-  overflow-x: hidden;
   width: 100%;
+  padding-bottom: 50px;
+}
+.css-y1c0xs {
+  scrollbar-width: none; /* For Firefox */
+  -ms-overflow-style: none; /* For Internet Explorer and Edge */
+}
+.css-1qyrjaz {
+  bottom: 35px;
 }
 @media screen and (max-width: 735px) {
   #frame .content .messages {
     max-height: calc(100% - 105px);
   }
 }
-#frame .content .messages::-webkit-scrollbar {
-  width: 8px;
-  background: transparent;
+.css-y1c0xs::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Opera */
 }
-#frame .content .messages::-webkit-scrollbar-thumb {
+.css-y1c0xs::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.3);
 }
 #frame .content .messages ul li {
