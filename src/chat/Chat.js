@@ -263,14 +263,14 @@ const Chat = (props) => {
               <li
                 key={key}
                 className={
-                  msg.sender?.id !== currentUser.id ||
-                  msg.sender !пше == currentUser.username
-                    ? "replies"
-                    : "sent"
+                  msg.sender?.id === currentUser.id ||
+                  msg.sender === currentUser.username
+                    ? "sent"
+                    : "replies"
                 }
               >
                 <p>{msg.content}</p>
-                {console.log(msg)}
+                {console.log(msg.sender, currentUser.username, msg.sender?.id, currentUser.id)}
               </li>
             ))}
           </ul>
