@@ -68,10 +68,10 @@ const Chat = (props) => {
         console.log("Connected to WebSocket");
 
         // Подписываемся на уведомления для текущего пользователя
-        stompClient.subscribe(
-          `/user/${currentUser.username}/queue/notifications`,
-          onMessageReceived
-        );
+        // stompClient.subscribe(
+        //   `/user/${currentUser.username}/queue/notifications`,
+        //   onMessageReceived
+        // );
         setIsConnected(true);
       }
     );
