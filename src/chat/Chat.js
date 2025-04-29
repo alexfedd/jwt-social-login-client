@@ -87,24 +87,17 @@ const Chat = (props) => {
   };
   const onMessageReceived = (msg) => {
     const message = JSON.parse(msg.body);
-    // const active = JSON.parse(sessionStorage.getItem("recoil-persist"))
-    //   .chatActiveContact;
-    console.log(messages);
+
+    if (!message || !message.content) {
+      console.warn("Received an empty or invalid message:", message);
+      return;
+    }
+
     setMessages((prevMessages) => {
       const newMessages = [...(prevMessages.content || [])];
       newMessages.push({ sender: message.sender, content: message.content });
       return { ...prevMessages, content: newMessages };
     });
-    // if (active.id === notification.senderId) {
-    //   findChatMessage(notification.id).then((message) => {
-    //     const newMessages = JSON.parse(sessionStorage.getItem("recoil-persist"))
-    //       .chatMessages;
-    //     newMessages.push(message);
-    //     setMessages(newMessages);
-    //   });
-    // } else {
-    //   message.info("Received a new message from " + notification.senderName);
-    // }
   };
   const onActiveChatChange = (chat) => {
     if (currentChatSubscription) {
@@ -120,12 +113,6 @@ const Chat = (props) => {
         sender: currentUser.username,
       };
       stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(message));
-      message.sender = currentUser;
-      setMessages((prevMessages) => {
-        const newMessages = [...(prevMessages.content || [])];
-        newMessages.push({ sender: message.sender, content: message.content });
-        return { ...prevMessages, content: newMessages };
-      });
     }
   };
 
