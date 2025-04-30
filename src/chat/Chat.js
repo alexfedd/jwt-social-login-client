@@ -1,20 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Button, Checkbox, Input, message, Modal } from "antd";
-import {
-  getUsers,
-  findChatMessages,
-  getUserChats,
-  createPrivateChat,
-  createGroupChat,
-  uploadFile,
-  uploadFile2,
-} from "../util/ApiUtil";
+import { getUsers, findChatMessages, getUserChats, createPrivateChat, createGroupChat, uploadFile } from "../util/ApiUtil";
 import { useRecoilValue } from "recoil";
 import { loggedInUser } from "../atom/globalState";
 import ScrollToBottom from "react-scroll-to-bottom";
 import "./Chat.css";
 import defaultAvatar from "./../assets/user.png";
-import { Image } from "./Image";
+import ChatSidebar from "./components/ChatSidebar";
+import ChatMessages from "./components/ChatMessages";
+import ChatInput from "./components/ChatInput";
 
 var stompClient = null;
 const Chat = (props) => {
@@ -63,6 +57,13 @@ const Chat = (props) => {
       setCurrentChatSubscription(chatSubscription);
     }
   }, [isConnected]);
+  const onActiveChatChange = (chat) => {
+    if (chat.id === activeChat.id) return;
+    if (currentChatSubscription) {
+      currentChatSubscription.unsubscribe();
+    }
+    setActiveChat(chat);
+  };
   const connect = () => {
     const Stomp = require("stompjs");
     var SockJS = require("sockjs-client");
@@ -72,12 +73,6 @@ const Chat = (props) => {
       { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       async function (frame) {
         console.log("Connected to WebSocket");
-
-        // Подписываемся на уведомления для текущего пользователя
-        // stompClient.subscribe(
-        //   `/user/${currentUser.username}/queue/notifications`,
-        //   onMessageReceived
-        // );
         setIsConnected(true);
       }
     );
@@ -91,9 +86,10 @@ const Chat = (props) => {
       console.log("Connection closed");
     };
   };
+
   const onMessageReceived = (msg) => {
     const message = JSON.parse(msg.body);
-    if (!message || !message.content) {
+    if (!message || (!message.content && !message.fileUrl)) {
       console.warn("Received an empty or invalid message:", message);
       return;
     }
@@ -104,12 +100,7 @@ const Chat = (props) => {
       return { ...prevMessages, content: newMessages };
     });
   };
-  const onActiveChatChange = (chat) => {
-    if (currentChatSubscription) {
-      currentChatSubscription.unsubscribe();
-    }
-    setActiveChat(chat);
-  };
+
   const sendMessage = async (msg) => {
     if (msg.trim() === "" && !file) {
       message.warning("Cannot send an empty message");
@@ -120,8 +111,8 @@ const Chat = (props) => {
 
     if (file) {
       try {
-        const response = await uploadFile(file)
-        fileUrl = response; // Assuming the API returns the file URL in this format
+        const response = await uploadFile(file);
+        fileUrl = response;
       } catch (error) {
         console.error("Error uploading file:", error);
         message.error("Failed to upload file");
@@ -137,14 +128,8 @@ const Chat = (props) => {
     };
 
     stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(messageData));
-    setText(""); // Clear input field
-    setFile(null); // Reset attached file
-  };
-
-  const handleFileChange = (event) => {
-    if (event.target.files.length > 0) {
-      setFile(event.target.files[0]);
-    }
+    setText("");
+    setFile(null);
   };
 
   const loadContacts = () => {
@@ -160,25 +145,15 @@ const Chat = (props) => {
     );
   };
 
-  const handleProfileNavigation = () => {
-    props.history.push("/");
-  };
-
   const onAddChatClick = () => {
     getUsers().then((users) => {
       setAllUsers(users);
-      setSelectedUserIds([]); // reset any prior
+      setSelectedUserIds([]);
       setChatName("");
       setIsModalVisible(true);
     });
   };
 
-  // 2) handle checkbox selections
-  const onUserSelect = (checkedValues) => {
-    setSelectedUserIds(checkedValues);
-  };
-
-  // 3) create chat depending on count
   const onCreateChat = () => {
     if (selectedUserIds.length === 0) {
       message.warning("Select at least one user");
@@ -188,7 +163,6 @@ const Chat = (props) => {
     let chatNameToUse = chatName.trim();
 
     if (selectedUserIds.length === 1) {
-      // Use the selected user's name as the chat name for private chats
       const selectedUser = allUsers.find(
         (user) => user.id === selectedUserIds[0]
       );
@@ -210,7 +184,7 @@ const Chat = (props) => {
       .then(() => {
         message.success("Chat created");
         setIsModalVisible(false);
-        loadContacts(); // refresh the sidebar
+        loadContacts();
       })
       .catch((err) => {
         console.error(err);
@@ -220,108 +194,29 @@ const Chat = (props) => {
 
   return (
     <div id="frame">
-      <div id="sidepanel">
-        <div id="profile">
-          <div className="wrap">
-            <img
-              id="profile-img"
-              src={defaultAvatar}
-              className="online"
-              alt=""
-            />
-            <p>{currentUser.username}</p>
-          </div>
-        </div>
-        <div id="search" />
-        <div id="contacts">
-          <ul>
-            {chats.map((chat, key) => (
-              <li
-                onClick={() => onActiveChatChange(chat)}
-                key={key}
-                className={
-                  activeChat && chat.id === activeChat.id
-                    ? "contact active"
-                    : "contact"
-                }
-              >
-                <div className="wrap">
-                  <img id={chat.id} src={defaultAvatar} alt="" />
-                  <div className="meta">
-                    <p className="name">{chat.name}</p>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div id="bottom-bar">
-          <button onClick={handleProfileNavigation} id="addcontact">
-            <i className="fa fa-user fa-fw" aria-hidden="true"></i>{" "}
-            <span>Profile</span>
-          </button>
-          <button onClick={onAddChatClick} id="settings">
-            <i className="fa fa-cog fa-fw" aria-hidden="true"></i>{" "}
-            <span>Add chat</span>
-          </button>
-        </div>
-      </div>
+      <ChatSidebar
+        chats={chats}
+        activeChat={activeChat}
+        setActiveChat={onActiveChatChange}
+        onAddChatClick={onAddChatClick}
+        history={props.history}
+      />
       <div className="content">
         <div className="contact-profile">
           <img src={activeChat && defaultAvatar} alt="" />
           <p>{activeChat && activeChat.name}</p>
         </div>
-        <ScrollToBottom className="messages">
-          <ul>
-            {messages.content?.map((msg, key) => (
-              <li
-                key={key}
-                className={
-                  msg.sender?.id === currentUser.id ||
-                  msg.sender === currentUser.username
-                    ? "sent"
-                    : "replies"
-                }
-              >
-                {msg.fileUrl && (
-                  <Image file={msg.fileUrl} />
-                )}
-                <p>{msg.content}</p>
-              </li>
-            ))}
-          </ul>
-        </ScrollToBottom>
-        <div className="message-input">
-          <div className="wrap">
-            <input
-              name="user_input"
-              size="large"
-              placeholder="Write your message..."
-              value={text}
-              onChange={(event) => setText(event.target.value)}
-              onKeyPress={(event) => {
-                if (event.key === "Enter") {
-                  sendMessage(text);
-                }
-              }}
-            />
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              style={{ marginLeft: "10px" }}
-              className="file-input"
-              id="file-input"
-            />
-            <label htmlFor="file-input" className="file-label">
-              <i className="fa fa-paperclip" aria-hidden="true"></i>
-            </label>
-            <Button
-              icon={<i className="fa fa-paper-plane" aria-hidden="true"></i>}
-              onClick={() => sendMessage(text)}
-            />
-          </div>
-        </div>
+        <ChatMessages messages={messages} currentUser={currentUser} />
+        <ChatInput
+          text={text}
+          setText={setText}
+          sendMessage={sendMessage}
+          handleFileChange={(event) => {
+            if (event.target.files.length > 0) {
+              setFile(event.target.files[0]);
+            }
+          }}
+        />
       </div>
       <Modal
         title="Select users to chat with"
@@ -339,7 +234,7 @@ const Chat = (props) => {
         <Checkbox.Group
           style={{ width: "100%" }}
           value={selectedUserIds}
-          onChange={onUserSelect}
+          onChange={(checkedValues) => setSelectedUserIds(checkedValues)}
         >
           {allUsers.map((u) => (
             <Checkbox
