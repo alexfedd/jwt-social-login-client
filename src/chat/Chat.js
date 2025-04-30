@@ -31,6 +31,17 @@ const Chat = (props) => {
     }
     connect();
     loadContacts();
+    return () => {
+      if (stompClient) {
+        stompClient.disconnect(() => {
+          console.log("Disconnected from WebSocket");
+        });
+      }
+      if (currentChatSubscription) {
+        currentChatSubscription.unsubscribe();
+      }
+      setIsConnected(false);
+    };
   }, []);
 
   useEffect(() => {
@@ -72,7 +83,6 @@ const Chat = (props) => {
     stompClient.connect(
       { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       async function (frame) {
-        console.log("Connected to WebSocket");
         setIsConnected(true);
       }
     );
@@ -80,7 +90,6 @@ const Chat = (props) => {
       console.log("WebSocket Error:", error);
     };
     stompClient.debug = function (str) {
-      console.log(str);
     };
     stompClient.onclose = function () {
       console.log("Connection closed");
