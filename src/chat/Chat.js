@@ -7,12 +7,14 @@ import {
   createPrivateChat,
   createGroupChat,
   uploadFile,
+  uploadFile2,
 } from "../util/ApiUtil";
 import { useRecoilValue } from "recoil";
 import { loggedInUser } from "../atom/globalState";
 import ScrollToBottom from "react-scroll-to-bottom";
 import "./Chat.css";
 import defaultAvatar from "./../assets/user.png";
+import { Image } from "./Image";
 
 var stompClient = null;
 const Chat = (props) => {
@@ -38,6 +40,7 @@ const Chat = (props) => {
   }, []);
 
   useEffect(() => {
+    setMessages({});
     if (activeChat === undefined) return;
     findChatMessages(activeChat.id).then((msgs) => {
       return setMessages(msgs);
@@ -90,7 +93,6 @@ const Chat = (props) => {
   };
   const onMessageReceived = (msg) => {
     const message = JSON.parse(msg.body);
-
     if (!message || !message.content) {
       console.warn("Received an empty or invalid message:", message);
       return;
@@ -98,7 +100,7 @@ const Chat = (props) => {
 
     setMessages((prevMessages) => {
       const newMessages = [...(prevMessages.content || [])];
-      newMessages.push({ sender: message.sender, content: message.content });
+      newMessages.push({ sender: message.sender, content: message.content, fileUrl: message.fileUrl });
       return { ...prevMessages, content: newMessages };
     });
   };
@@ -119,8 +121,7 @@ const Chat = (props) => {
     if (file) {
       try {
         const response = await uploadFile(file)
-        fileUrl = await response.text();
-        console.log(fileUrl);
+        fileUrl = response; // Assuming the API returns the file URL in this format
       } catch (error) {
         console.error("Error uploading file:", error);
         message.error("Failed to upload file");
@@ -229,22 +230,6 @@ const Chat = (props) => {
               alt=""
             />
             <p>{currentUser.username}</p>
-            <div id="status-options">
-              <ul>
-                <li id="status-online" className="active">
-                  <span className="status-circle"></span> <p>Online</p>
-                </li>
-                <li id="status-away">
-                  <span className="status-circle"></span> <p>Away</p>
-                </li>
-                <li id="status-busy">
-                  <span className="status-circle"></span> <p>Busy</p>
-                </li>
-                <li id="status-offline">
-                  <span className="status-circle"></span> <p>Offline</p>
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
         <div id="search" />
@@ -261,7 +246,6 @@ const Chat = (props) => {
                 }
               >
                 <div className="wrap">
-                  <span className="contact-status online"></span>
                   <img id={chat.id} src={defaultAvatar} alt="" />
                   <div className="meta">
                     <p className="name">{chat.name}</p>
@@ -300,11 +284,7 @@ const Chat = (props) => {
                 }
               >
                 {msg.fileUrl && (
-                  <img
-                    src={`http://78.24.223.206:8082/api/files/${msg.fileUrl}`}
-                    alt="Attached"
-                    style={{ maxWidth: "200px", marginBottom: "10px" }}
-                  />
+                  <Image file={msg.fileUrl} />
                 )}
                 <p>{msg.content}</p>
               </li>

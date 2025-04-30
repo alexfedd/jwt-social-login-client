@@ -8,27 +8,31 @@ const request = (options) => {
   }
 
   if (localStorage.getItem("accessToken")) {
-    headers.append(
-      "Authorization",
-      "Bearer " + localStorage.getItem("accessToken")
-    );
+    headers.append("Authorization", "Bearer " + localStorage.getItem("accessToken"));
   }
 
   const defaults = { headers: headers };
   options = Object.assign({}, defaults, options);
 
   return fetch(options.url, options).then((response) => {
-    console.log(response);
-    return response?.json().then((json) => {
-      if (!response.ok) {
-        return Promise.reject(json);
-      }
-      return json;
-    }).catch((error) => {
-      console.error("Error parsing JSON response:", error);
-    })
-  }
-  );
+    const contentType = response.headers.get("content-type");
+
+    if (!response.ok) {
+      return response.text().then((text) => {
+        console.error("Server error:", text);
+        return Promise.reject(text);
+      });
+    }
+
+    if (contentType && contentType.includes("application/json")) {
+      return response.json();
+    } else {
+      return response.text();
+    }
+  }).catch((error) => {
+    console.error("Request failed:", error);
+    return Promise.reject(error);
+  });
 };
 
 export function login(loginRequest) {
@@ -126,6 +130,14 @@ export function findChatMessage(id) {
   });
 }
 
+
+export function getFile(fileName) {
+  
+  return request({
+    url: ROOT_URL + "/api/files/" + fileName,
+  });
+}
+
 export function uploadFile(file) {
   const formData = new FormData();
   formData.append("file", file);
@@ -137,10 +149,27 @@ export function uploadFile(file) {
     body: formData,
   });
 }
-
-export function getFile(fileName) {
-
-  return request({
-    url: ROOT_URL + "/api/files/" + fileName,
-  });
-}
+  export async function uploadFile2(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    try {
+      const response = await fetch("http://78.24.223.206:8082/api/files/upload", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Добавляем токен в заголовки
+        },
+        body: formData, // Передаем FormData в body
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error uploading file: ${response.statusText}`);
+      }
+  
+      const fileUrl = await response.text(); // Получаем URL загруженного файла
+      return fileUrl;
+    } catch (error) {
+      console.error("Ошибка загрузки файла:", error.message);
+      return null;
+    }
+  }
