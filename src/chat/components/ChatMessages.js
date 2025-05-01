@@ -3,6 +3,11 @@ import ScrollToBottom from "react-scroll-to-bottom";
 import { Image } from "../Image";
 import { deleteChatMessage, editChatMessage } from "../../util/ApiUtil";
 import { Button, Input, Modal } from "antd";
+import FileLink from "./FileLink";
+
+const isImage = (url) => {
+  return url.match(/\.(jpeg|jpg|gif|png|webp|bmp|svg)$/i);
+};
 
 const ChatMessages = ({ messages, currentUser, setMessages }) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -69,7 +74,13 @@ const ChatMessages = ({ messages, currentUser, setMessages }) => {
                 );
               }}
             >
-              {msg.fileUrl && <Image file={msg.fileUrl} />}
+              {msg.fileUrl && (
+                isImage(msg.fileUrl) ? (
+                  <Image file={msg.fileUrl} />
+                ) : (
+                  <FileLink file={msg.fileUrl} />
+                )
+              )}
               <p>{msg.content}</p>
               {msg.sender?.id === currentUser.id && activeMessageId === msg.id && (
                 <div className="message-actions">

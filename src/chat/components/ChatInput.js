@@ -19,7 +19,6 @@ const ChatInput = ({ text, setText, sendMessage, handleFileChange }) => {
         />
         <input
           type="file"
-          accept="image/*"
           onChange={handleFileChange}
           style={{ marginLeft: "10px" }}
           className="file-input"

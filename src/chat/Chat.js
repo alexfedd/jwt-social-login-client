@@ -177,6 +177,7 @@ const Chat = (props) => {
       } catch (error) {
         console.error("Error uploading file:", error);
         message.error("Failed to upload file");
+        setFile(null);
         return;
       }
     }
