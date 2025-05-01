@@ -1,6 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, Checkbox, Input, message, Modal } from "antd";
-import { getUsers, findChatMessages, getUserChats, createPrivateChat, createGroupChat, uploadFile } from "../util/ApiUtil";
+import {
+  getUsers,
+  findChatMessages,
+  getUserChats,
+  createPrivateChat,
+  createGroupChat,
+  uploadFile,
+} from "../util/ApiUtil";
 import { useRecoilValue } from "recoil";
 import { loggedInUser } from "../atom/globalState";
 import ScrollToBottom from "react-scroll-to-bottom";
@@ -9,6 +16,7 @@ import defaultAvatar from "./../assets/user.png";
 import ChatSidebar from "./components/ChatSidebar";
 import ChatMessages from "./components/ChatMessages";
 import ChatInput from "./components/ChatInput";
+import notificationSound from "../assets/notification.mp3"; // Import the sound file
 
 var stompClient = null;
 const Chat = (props) => {
@@ -16,6 +24,7 @@ const Chat = (props) => {
   const [text, setText] = useState("");
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(undefined);
+  const activeChatRef = useRef(null);
   const [currentChatSubscription, setCurrentChatSubscription] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState({});
@@ -45,9 +54,13 @@ const Chat = (props) => {
   }, []);
 
   useEffect(() => {
+    activeChatRef.current = activeChat;
+  }, [activeChat]);
+  useEffect(() => {
     setMessages({});
     if (activeChat === undefined) return;
     findChatMessages(activeChat.id).then((msgs) => {
+      console.log(msgs);
       return setMessages(msgs);
     });
     if (stompClient.connected) {
@@ -60,7 +73,7 @@ const Chat = (props) => {
     loadContacts();
   }, [activeChat]);
   useEffect(() => {
-    if (isConnected) {
+    if (isConnected && activeChat) {
       const chatSubscription = stompClient.subscribe(
         `/topic/chat/${activeChat.id}`,
         onMessageReceived
@@ -84,17 +97,51 @@ const Chat = (props) => {
       { Authorization: `Bearer ${localStorage.getItem("accessToken")}` },
       async function (frame) {
         setIsConnected(true);
+        // Подписываемся на уведомления для текущего пользователя
+        stompClient.subscribe(
+          `/user/${currentUser.username}/queue/notifications`,
+          onNotificationReceived
+        );
       }
     );
     stompClient.onerror = function (error) {
       console.log("WebSocket Error:", error);
     };
     stompClient.debug = function (str) {
+      console.log(str);
     };
     stompClient.onclose = function () {
       console.log("Connection closed");
     };
   };
+  const playNotificationSound = () => {
+    const audio = new Audio(notificationSound);
+    audio.play().catch((error) => console.error("Error playing notification sound:", error));
+  };
+  const onNotificationReceived = (msg) => {
+    const message = JSON.parse(msg.body);
+    const notificationChat = message.chatId;
+    if (!notificationChat) {
+      console.warn("Received an empty or invalid notification:", message);
+      return;
+    }
+    // Play notification sound when a new message is received
+    playNotificationSound();
+    setChats((prevChats) => {
+      console.log("Previous chats:", prevChats); // Логируем предыдущее состояние
+      const chat = prevChats.find((chat) => chat.id == notificationChat);
+      if (chat) {
+        console.log(activeChatRef, chat);
+        if (activeChatRef.current && activeChatRef.current.id === chat.id) return prevChats;
+        chat.hasNotification = true;
+        return prevChats.map((c) => (c.id === chat.id ? chat : c));
+      } else {
+        console.warn("Chat not found for notification:", notificationChat);
+        return prevChats;
+      }
+    });
+  };
+
 
   const onMessageReceived = (msg) => {
     const message = JSON.parse(msg.body);
@@ -105,9 +152,14 @@ const Chat = (props) => {
 
     setMessages((prevMessages) => {
       const newMessages = [...(prevMessages.content || [])];
-      newMessages.push({ sender: message.sender, content: message.content, fileUrl: message.fileUrl });
+      newMessages.push({
+        sender: message.sender,
+        content: message.content,
+        fileUrl: message.fileUrl,
+      });
       return { ...prevMessages, content: newMessages };
     });
+
   };
 
   const sendMessage = async (msg) => {
@@ -146,6 +198,7 @@ const Chat = (props) => {
 
     promise.then((promises) =>
       Promise.all(promises).then((chats) => {
+        console.log(chats);
         setChats(chats);
         if (activeChat === undefined && chats.length > 0) {
           setActiveChat(chats[0]);
@@ -209,13 +262,18 @@ const Chat = (props) => {
         setActiveChat={onActiveChatChange}
         onAddChatClick={onAddChatClick}
         history={props.history}
+        setChats={setChats}
       />
       <div className="content">
         <div className="contact-profile">
           <img src={activeChat && defaultAvatar} alt="" />
           <p>{activeChat && activeChat.name}</p>
         </div>
-        <ChatMessages messages={messages} currentUser={currentUser} />
+        <ChatMessages
+          messages={messages}
+          currentUser={currentUser}
+          setMessages={setMessages} // Pass setMessages to allow updates from ChatMessages
+        />
         <ChatInput
           text={text}
           setText={setText}
